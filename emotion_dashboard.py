@@ -74,17 +74,16 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
     df.columns = df.columns.str.strip()
 
-    # 🔹 첫 컬럼은 Timestamp (응답자 구분)
-    respondent_col = df.columns[0]
+    # first column: email
+    respondent_col = df.columns[1]
 
     respondents = df[respondent_col].astype(str).unique()
     selected = st.selectbox("Select Respondent", respondents)
 
     person = df[df[respondent_col].astype(str) == selected].iloc[0]
 
-    # -------------------------
-    # 🔹 감정 분리
-    # -------------------------
+
+    # emotions
 
     pre_emotions = {}
     post_emotions = {}
@@ -97,7 +96,7 @@ if uploaded_file:
             if col != respondent_col:
                 pre_emotions[col] = person[col]
 
-    # 공통 감정만 유지
+
     emotions = list(pre_emotions.keys())
 
     data = []
@@ -117,7 +116,7 @@ if uploaded_file:
     emotion_df = pd.DataFrame(data)
 
     # ==============================
-    # ⭐ Strong Emotions (≥4)
+    # Strong Emotions (≥4)
     # ==============================
 
     st.header("⭐ Strong Emotions (≥4)")
@@ -189,10 +188,7 @@ if uploaded_file:
         with cols[i % 2]:
             components.html(html_code, height=260)
 
-
-    # ==============================
-    # 🏆 Dominant Emotions
-    # ==============================
+    # Dominant Emotions
 
     st.header("Dominant Emotions")
 
@@ -215,9 +211,7 @@ if uploaded_file:
         )
 
 
-    # ==============================
-    # 🔄 Emotion Changes
-    # ==============================
+    # Emotion Changes
 
     st.header("Emotion Changes")
 
