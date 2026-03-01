@@ -543,3 +543,58 @@ if uploaded:
                 st.success(f"✅ Successfully sent {success_count} report(s).")
             if fail_count:
                 st.error(f"❌ {fail_count} report(s) failed. Check your App Password and try again.")
+    # ── Reminder email section ────────────────────────────────────────────────
+    st.markdown("---")
+    st.markdown(
+        '<div style="font-family:DM Serif Display,serif;font-size:1.5rem;color:#1a1a2e;margin-bottom:4px;">'
+        '⏰ Send Daily Meal Reminder</div>'
+        '<div style="font-size:0.82rem;color:#9ca3af;font-weight:300;margin-bottom:20px;">'
+        'Sends a quick reminder to all participants to log at least one meal today</div>',
+        unsafe_allow_html=True
+    )
+
+    if st.button("📬 Send Reminder to All Participants"):
+        if not gmail_user or not gmail_pass:
+            st.error("Please fill in your Gmail address and App Password in Gmail Settings above.")
+        else:
+            import datetime
+            today = datetime.date.today().strftime("%B %d, %Y")
+            all_emails = df['Email Address'].dropna().unique()
+            progress2  = st.progress(0)
+            status2    = st.empty()
+            s_count, f_count = 0, 0
+
+            for i, participant_email in enumerate(all_emails):
+                status2.info(f"Sending reminder to {participant_email}...")
+                name = participant_email.split('@')[0]
+                try:
+                    msg = MIMEMultipart()
+                    msg['From']    = gmail_user
+                    msg['To']      = participant_email
+                    msg['Subject'] = f"🍽️ Don't forget to log your meal today! ({today})"
+                    body = f"""Hi {name},
+
+Just a friendly reminder to log at least one meal for today ({today}) in the Food & Mood study.
+
+Tracking your meals helps build a clearer picture of how the foods you eat affect your emotions over time. Even a quick entry makes a difference!
+
+Thanks for participating,
+The Food & Mood Team
+"""
+                    msg.attach(MIMEText(body, 'plain'))
+                    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                        server.login(gmail_user, gmail_pass)
+                        server.sendmail(gmail_user, participant_email, msg.as_string())
+                    s_count += 1
+                    status2.success(f"✅ Reminder sent to {participant_email}")
+                except Exception as ex:
+                    f_count += 1
+                    status2.error(f"❌ Failed for {participant_email}: {ex}")
+
+                progress2.progress((i + 1) / len(all_emails))
+
+            status2.empty()
+            if s_count:
+                st.success(f"✅ Reminders sent to {s_count} participant(s).")
+            if f_count:
+                st.error(f"❌ {f_count} reminder(s) failed. Check your App Password and try again.")
