@@ -25,10 +25,10 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; background-colo
 .block-container { padding-top: 2rem; }
 .dashboard-title {
     font-family: 'DM Serif Display', serif;
-    font-size: 2.2rem; color: #1a1a2e; text-align: center; margin-bottom: 4px;
+    font-size: 2.2rem; color: #f8fafc; text-align: center; margin-bottom: 4px;
 }
 .dashboard-subtitle {
-    font-size: 0.95rem; color: #6b7280; text-align: center; margin-bottom: 28px; font-weight: 300;
+    font-size: 0.95rem; color: #cbd5e1; text-align: center; margin-bottom: 28px; font-weight: 300;
 }
 .chart-card {
     background: white; border-radius: 16px; padding: 20px 22px;
@@ -47,23 +47,25 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; background-colo
 """, unsafe_allow_html=True)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
-FOOD_GROUPS  = ['Simple Carbs', 'Complex Carbs', 'Proteins', 'Fats', 'Fiber/Veggies']
-NUT_COLS     = ['Simple Carb Rating', 'Complex Carb Rating', 'Protein Rating', 'Fat Rating', 'Fiber Rating']
-GROUP_COLORS = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa']
-RADAR_FILLS  = ['rgba(248,113,113,0.1)','rgba(96,165,250,0.1)','rgba(52,211,153,0.1)',
-                'rgba(251,191,36,0.1)','rgba(167,139,250,0.1)']
-EMOTIONS = ['Happy','Sad','Calm','Stressed','Anxious','Irritable','Motivated','Tired','Energized','Overwhelmed']
+FOOD_GROUPS  = ['Simple Carbs', 'Complex Carbs', 'Fats', 'Fiber', 'Proteins']
+NUT_COLS     = ['Simple Carb Rating', 'Complex Carb Rating', 'Fat Rating', 'Fiber Rating', 'Protein Rating']
+GROUP_COLORS = ['#f87171', '#60a5fa', '#fbbf24', '#a78bfa', '#34d399']
+RADAR_FILLS  = ['rgba(248,113,113,0.1)','rgba(96,165,250,0.1)',
+                'rgba(251,191,36,0.1)','rgba(167,139,250,0.1)','rgba(52,211,153,0.1)']
+EMOTIONS = ['Emotional balance', 'Ease of mind', 'Stressload', 'Activation', 'Drive']
 EMOTION_COLORS = {
-    'Happy':'#f59e0b','Sad':'#6366f1','Calm':'#10b981','Stressed':'#ef4444',
-    'Anxious':'#f97316','Irritable':'#ec4899','Motivated':'#3b82f6',
-    'Tired':'#8b5cf6','Energized':'#14b8a6','Overwhelmed':'#f43f5e',
+    'Emotional balance': '#10b981',
+    'Ease of mind': '#60a5fa',
+    'Stressload': '#ef4444',
+    'Activation': '#fbbf24',
+    'Drive': '#a78bfa',
 }
 EXTRA_EMOTIONS = [
-    ('Calm',     '#10b981', 'Avg calm after meal by food group'),
-    ('Stressed', '#ef4444', 'Avg stress after meal by food group'),
-    ('Anxious',  '#f97316', 'Avg anxiety after meal by food group'),
-    ('Energized','#14b8a6', 'Avg energy after meal by food group'),
-    ('Tired',    '#8b5cf6', 'Avg tiredness after meal by food group'),
+    ('Emotional balance', '#10b981', 'Avg emotional balance after meal by food group'),
+    ('Ease of mind', '#60a5fa', 'Avg ease of mind after meal by food group'),
+    ('Stressload', '#ef4444', 'Avg stressload after meal by food group'),
+    ('Activation', '#fbbf24', 'Avg activation after meal by food group'),
+    ('Drive', '#a78bfa', 'Avg drive after meal by food group'),
 ]
 
 def safe(v):
@@ -75,7 +77,7 @@ def build_figures(post, pre, nut_vals, emotion_vals):
     figs = {}
 
     # Radar
-    radar_axes = ['Calm', 'Stressed', 'Anxious', 'Energized', 'Tired']
+    radar_axes = EMOTIONS
     fig_radar = go.Figure()
     for fg, nv, color, fill in zip(FOOD_GROUPS, nut_vals, GROUP_COLORS, RADAR_FILLS):
         w = nv / 10
@@ -88,11 +90,11 @@ def build_figures(post, pre, nut_vals, emotion_vals):
     fig_radar.update_layout(
         polar=dict(
             radialaxis=dict(range=[0,5], tickfont=dict(size=8, color='#9ca3af'), gridcolor='#e5e7eb'),
-            angularaxis=dict(tickfont=dict(size=11, color='#374151')),
+            angularaxis=dict(tickfont=dict(size=10, color='#374151')),
             bgcolor='white',
         ),
-        height=380, paper_bgcolor='white', margin=dict(l=40,r=40,t=10,b=60),
-        legend=dict(orientation='h', y=-0.2, xanchor='center', x=0.5,
+        height=450, paper_bgcolor='white', margin=dict(l=80,r=140,t=40,b=80),
+        legend=dict(orientation='h', y=-0.18, xanchor='center', x=0.5,
                     font=dict(size=11, color='#374151'), bgcolor='rgba(0,0,0,0)'),
         showlegend=True,
     )
@@ -205,15 +207,17 @@ def generate_pdf(email, n_meals, meal_type_str, how_str, date_str, post, pre, nu
     story.append(HRFlowable(width=W, thickness=1, color=colors.HexColor('#e8e4df')))
     story.append(Spacer(1, 4*mm))
 
-    row1 = [fig_to_image(figs[f'emotion_{e}'], W/3 - 2*mm, 55*mm)
-            for e, _, _ in EXTRA_EMOTIONS[:3]]
-    row2 = [fig_to_image(figs[f'emotion_{e}'], W/3 - 2*mm, 55*mm)
-            for e, _, _ in EXTRA_EMOTIONS[3:]]
-    row2 += [Spacer(W/3, 1)]  # pad to 3 cols
+    row1 = [fig_to_image(figs[f'emotion_{e}'], W/2 - 2*mm, 55*mm)
+            for e, _, _ in EXTRA_EMOTIONS[:2]]
+    row2 = [fig_to_image(figs[f'emotion_{e}'], W/2 - 2*mm, 55*mm)
+            for e, _, _ in EXTRA_EMOTIONS[2:4]]
+    row3_img = fig_to_image(figs[f'emotion_{EXTRA_EMOTIONS[4][0]}'], W/2 - 2*mm, 55*mm)
+    row3 = [row3_img, Spacer(W/2, 1)]  # Last emotion centered
 
-    t1 = Table([row1], colWidths=[W/3]*3)
-    t2 = Table([row2], colWidths=[W/3]*3)
-    story += [t1, Spacer(1, 3*mm), t2, Spacer(1, 6*mm)]
+    t1 = Table([row1], colWidths=[W/2]*2)
+    t2 = Table([row2], colWidths=[W/2]*2)
+    t3 = Table([row3], colWidths=[W/2]*2)
+    story += [t1, Spacer(1, 3*mm), t2, Spacer(1, 3*mm), t3, Spacer(1, 6*mm)]
 
     # Before vs After
     story.append(Paragraph("Before vs. After Meal (Avg)", heading_style))
@@ -304,9 +308,14 @@ if uploaded:
     df = pd.read_csv(uploaded)
     df.columns = df.columns.str.strip()
 
-    for e in EMOTIONS:
-        df[f'post_{e}'] = df[f'{e}.1'].apply(safe)
-        df[f'pre_{e}']  = df[e].apply(safe)
+    # Map pre and post emotion columns (pre=cols 2-6, post=cols 15-19)
+    pre_emotion_cols = df.columns[2:7].tolist()  # Emotional balance through Drive (pre)
+    post_emotion_cols = df.columns[15:20].tolist()  # Emotional balance through Drive (post)
+    
+    for i, e in enumerate(EMOTIONS):
+        df[f'pre_{e}'] = df.iloc[:, i+2].apply(safe)  # Pre emotions start at column 2
+        df[f'post_{e}'] = df.iloc[:, i+15].apply(safe)  # Post emotions start at column 15
+    
     for nc, fg in zip(NUT_COLS, FOOD_GROUPS):
         df[f'nut_{fg}'] = df[nc].apply(safe)
 
@@ -345,7 +354,7 @@ if uploaded:
     st.markdown("---")
 
     # ── Radar ─────────────────────────────────────────────────────────────────
-    radar_axes = ['Calm', 'Stressed', 'Anxious', 'Energized', 'Tired']
+    radar_axes = EMOTIONS
     with st.container():
         st.markdown(
             '<div class="chart-card">'
@@ -364,11 +373,11 @@ if uploaded:
         fig3.update_layout(
             polar=dict(
                 radialaxis=dict(range=[0,5], tickfont=dict(size=8,color='#9ca3af'), gridcolor='#e5e7eb'),
-                angularaxis=dict(tickfont=dict(size=11,color='#374151')),
+                angularaxis=dict(tickfont=dict(size=10,color='#374151')),
                 bgcolor='white',
             ),
-            height=380, paper_bgcolor='white', margin=dict(l=40,r=40,t=10,b=10),
-            legend=dict(orientation='h', y=-0.2, xanchor='center', x=0.5,
+            height=450, paper_bgcolor='white', margin=dict(l=80,r=140,t=40,b=80),
+            legend=dict(orientation='h', y=-0.18, xanchor='center', x=0.5,
                         font=dict(size=11,color='#374151'), bgcolor='rgba(0,0,0,0)'),
             showlegend=True,
         )
